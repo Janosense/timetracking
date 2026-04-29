@@ -3,6 +3,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   modules: ['@nuxt/ui'],
+  css: ['~/assets/css/main.css'],
   runtimeConfig: {
     adminPin: process.env.NUXT_ADMIN_PIN || '1234',
     jwtSecret: process.env.NUXT_JWT_SECRET || 'change-me-in-production-secret-key'
