@@ -77,6 +77,8 @@ const props = defineProps<{
   competition: CompetitionResponse
 }>()
 
+const emit = defineEmits<{ 'lap-end': [], 'control-time-end': [] }>()
+
 const { formatMs } = useFormatTime()
 
 const elapsed = ref(0)
@@ -101,12 +103,24 @@ const lapProgressPercent = computed(() => {
   return Math.min(100, (lapElapsed.value / lapDurationMs.value) * 100)
 })
 
+let prevLap = 0
+let controlTimeEnded = false
+
 function update() {
   if (!props.competition.actualStart) return
   elapsed.value = Date.now() - props.competition.actualStart
   lapElapsed.value = elapsed.value % lapDurationMs.value
   lapRemaining.value = lapDurationMs.value - lapElapsed.value
   remaining.value = Math.max(0, controlTimeMs.value - elapsed.value)
+
+  if (props.competition.type === 'backyard_ultra') {
+    const lap = Math.floor(elapsed.value / lapDurationMs.value) + 1
+    if (prevLap && lap > prevLap) emit('lap-end')
+    prevLap = lap
+  } else if (controlTimeMs.value && !controlTimeEnded && remaining.value === 0) {
+    controlTimeEnded = true
+    emit('control-time-end')
+  }
 }
 
 let interval: ReturnType<typeof setInterval>

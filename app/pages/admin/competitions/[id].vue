@@ -61,7 +61,7 @@
 
     <!-- Active state -->
     <template v-else-if="competition.status === 'active'">
-      <RaceTimer :competition="competition" />
+      <RaceTimer :competition="competition" @lap-end="refresh" @control-time-end="refresh" />
 
       <div class="mt-5">
         <ParticipantGrid
