@@ -3,7 +3,9 @@ export function useAdminAuth() {
 
   async function checkAuth(): Promise<boolean> {
     try {
-      await $fetch('/api/auth/verify')
+      // Forward cookies in SSR context so the auth cookie reaches the internal API
+      const headers = useRequestHeaders(['cookie'])
+      await $fetch('/api/auth/verify', { headers })
       isAuthenticated.value = true
       return true
     } catch {
