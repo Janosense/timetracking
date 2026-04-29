@@ -7,7 +7,9 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "db:migrate": "drizzle-kit migrate",
+    "vercel-build": "drizzle-kit migrate && nuxt build"
   },
   "dependencies": {
     "@libsql/client": "^0.17.3",
