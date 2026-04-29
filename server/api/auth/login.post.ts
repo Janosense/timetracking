@@ -4,6 +4,15 @@ export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const { pin } = await readBody<{ pin: string }>(event)
 
+  console.log('[auth/login] debug', {
+    receivedLen: pin?.length ?? 0,
+    configLen: (config.adminPin as string)?.length ?? 0,
+    envSet: !!process.env.NUXT_ADMIN_PIN,
+    envLen: process.env.NUXT_ADMIN_PIN?.length ?? 0,
+    isDefault: config.adminPin === '1234',
+    match: pin === config.adminPin
+  })
+
   if (!pin || pin !== config.adminPin) {
     throw createError({ statusCode: 401, message: 'Invalid PIN' })
   }
