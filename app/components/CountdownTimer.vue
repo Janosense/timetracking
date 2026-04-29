@@ -21,12 +21,19 @@ const props = defineProps<{
   scheduledStart: number | null
 }>()
 
+const emit = defineEmits<{ started: [] }>()
+
 const { formatMs } = useFormatTime()
 const timeRemaining = ref(0)
+let fired = false
 
 function update() {
   if (!props.scheduledStart) { timeRemaining.value = 0; return }
   timeRemaining.value = Math.max(0, props.scheduledStart - Date.now())
+  if (!fired && timeRemaining.value === 0) {
+    fired = true
+    emit('started')
+  }
 }
 
 const formatted = computed(() => formatMs(timeRemaining.value))

@@ -13,6 +13,12 @@
           / {{ competition.totalCount }}
         </span>
       </div>
+      <div v-if="competition.currentLap !== null" class="flex items-center gap-1.5">
+        <span class="font-medium text-gray-900 dark:text-white tabular-nums">
+          {{ lapFinishedCount }}/{{ competition.activeCount }}
+        </span>
+        <span class="font-normal text-gray-500 dark:text-gray-400">finished lap {{ competition.currentLap }}</span>
+      </div>
       <div class="text-gray-400 dark:text-gray-500 text-xs">
         {{ competition.totalCount - competition.activeCount }} eliminated
       </div>
@@ -63,6 +69,10 @@ const emit = defineEmits<{
 }>()
 
 const participants = computed(() => props.competition.participants)
+
+const lapFinishedCount = computed(() =>
+  participants.value.filter(p => p.status === 'active' && p.currentLapFinished).length
+)
 
 const gridCols = computed(() => {
   const total = participants.value.length

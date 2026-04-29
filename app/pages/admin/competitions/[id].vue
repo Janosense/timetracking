@@ -41,7 +41,7 @@
 
     <!-- Pending state -->
     <template v-if="competition.status === 'pending'">
-      <CountdownTimer :scheduled-start="competition.scheduledStart" />
+      <CountdownTimer :scheduled-start="competition.scheduledStart" @started="refresh" />
       <div class="flex justify-center mt-4">
         <UButton
           size="xl"
@@ -238,7 +238,7 @@ const ending = ref(false)
 async function confirmEnd() {
   ending.value = true
   try {
-    await $fetch(`/api/competitions/${id}`, { method: 'DELETE' })
+    await $fetch(`/api/competitions/${id}/end`, { method: 'POST' })
     endModalOpen.value = false
     await refresh()
     toast.add({ title: 'Competition ended', color: 'neutral', duration: 3000 })

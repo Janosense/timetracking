@@ -1,9 +1,18 @@
-import { desc, eq, sql } from 'drizzle-orm'
+import { and, desc, eq, isNotNull, lte, sql } from 'drizzle-orm'
 import { getDb } from '../../db'
 import { competitions, participants } from '../../db/schema'
 
 export default defineEventHandler(async () => {
   const db = getDb()
+
+  const due = await db.select({ id: competitions.id }).from(competitions)
+    .where(and(
+      eq(competitions.status, 'pending'),
+      isNotNull(competitions.scheduledStart),
+      lte(competitions.scheduledStart, Date.now())
+    ))
+
+  for (const { id } of due) await processAutoStart(id)
 
   const rows = await db
     .select({

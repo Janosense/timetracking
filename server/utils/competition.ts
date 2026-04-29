@@ -8,6 +8,19 @@ export function computeCurrentLap(actualStart: number, lapDurationMinutes: numbe
   return Math.floor(elapsed / lapDurationMs) + 1
 }
 
+export async function processAutoStart(competitionId: string): Promise<void> {
+  const db = getDb()
+  const [competition] = await db.select().from(competitions)
+    .where(eq(competitions.id, competitionId)).limit(1)
+
+  if (!competition || competition.status !== 'pending' ||
+      !competition.scheduledStart || Date.now() < competition.scheduledStart) return
+
+  await db.update(competitions)
+    .set({ status: 'active', actualStart: competition.scheduledStart })
+    .where(eq(competitions.id, competitionId))
+}
+
 export async function processClassicExpiry(competitionId: string): Promise<void> {
   const db = getDb()
   const [competition] = await db.select().from(competitions)

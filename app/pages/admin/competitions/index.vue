@@ -83,6 +83,15 @@
                 >
                   Track
                 </UButton>
+                <UButton
+                  size="sm"
+                  variant="ghost"
+                  color="error"
+                  icon="i-lucide-trash-2"
+                  :disabled="c.status === 'active'"
+                  :title="c.status === 'active' ? 'End the competition before deleting' : 'Delete competition'"
+                  @click="openDelete(c)"
+                />
               </div>
             </td>
           </tr>
@@ -97,6 +106,13 @@
       <p class="text-sm mt-1 mb-6">Create your first competition to get started</p>
       <UButton to="/admin/competitions/new" icon="i-lucide-plus">New Competition</UButton>
     </div>
+
+    <DeleteCompetitionModal
+      v-model:open="deleteModalOpen"
+      :competition-name="deleteTarget?.name ?? null"
+      :loading="deleting"
+      @confirm="confirmDelete"
+    />
   </div>
 </template>
 
@@ -104,9 +120,22 @@
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const { formatDate } = useFormatTime()
+const toast = useToast()
 
-const { data: competitions, pending } = await useAsyncData('admin-competitions', () =>
-  $fetch('/api/competitions')
+interface CompetitionRow {
+  id: string
+  name: string
+  type: string
+  status: string
+  scheduledStart: number | null
+  actualStart: number | null
+  createdAt: number
+  participantCount: number
+}
+
+const { data: competitions, pending, refresh } = await useAsyncData<CompetitionRow[]>(
+  'admin-competitions',
+  () => $fetch('/api/competitions')
 )
 
 function statusLabel(status: string) {
@@ -115,5 +144,31 @@ function statusLabel(status: string) {
 
 function statusColor(status: string): 'neutral' | 'success' {
   return status === 'active' ? 'success' : 'neutral'
+}
+
+const deleteModalOpen = ref(false)
+const deleteTarget = ref<CompetitionRow | null>(null)
+const deleting = ref(false)
+
+function openDelete(c: CompetitionRow) {
+  deleteTarget.value = c
+  deleteModalOpen.value = true
+}
+
+async function confirmDelete() {
+  if (!deleteTarget.value) return
+  deleting.value = true
+  try {
+    await $fetch(`/api/competitions/${deleteTarget.value.id}`, { method: 'DELETE' })
+    deleteModalOpen.value = false
+    deleteTarget.value = null
+    await refresh()
+    toast.add({ title: 'Competition deleted', color: 'neutral', duration: 3000 })
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Failed to delete'
+    toast.add({ title: msg, color: 'error', duration: 4000 })
+  } finally {
+    deleting.value = false
+  }
 }
 </script>

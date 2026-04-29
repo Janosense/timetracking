@@ -110,22 +110,12 @@ const tableRows = computed(() => {
       .map(p => ({ ...p, place: placeMap.get(p.id) ?? null }))
   }
 
-  // Backyard Ultra
-  const statusOrder: Record<string, number> = { winner: 0, finisher: 1, active: 2, dnf: 3 }
-
+  // Backyard Ultra: laps DESC, total time ASC, bib ASC
   const sorted = [...participants].sort((a, b) => {
-    const ao = statusOrder[a.status] ?? 2
-    const bo = statusOrder[b.status] ?? 2
-    if (ao !== bo) return ao - bo
-    if ((a.status === 'winner' || a.status === 'finisher') && (b.status === 'winner' || b.status === 'finisher')) {
-      return (a.totalTimeMs ?? 0) - (b.totalTimeMs ?? 0)
-    }
-    if (a.status === 'active' && b.status === 'active') {
-      if (a.completedLaps !== b.completedLaps) return b.completedLaps - a.completedLaps
-    }
-    if (a.status === 'dnf' && b.status === 'dnf') {
-      return b.completedLaps - a.completedLaps
-    }
+    if (a.completedLaps !== b.completedLaps) return b.completedLaps - a.completedLaps
+    const at = a.totalTimeMs ?? Infinity
+    const bt = b.totalTimeMs ?? Infinity
+    if (at !== bt) return at - bt
     return a.bibNumber - b.bibNumber
   })
 
