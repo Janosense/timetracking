@@ -1,17 +1,15 @@
-import Database from 'better-sqlite3'
-import { drizzle } from 'drizzle-orm/better-sqlite3'
-import { migrate } from 'drizzle-orm/better-sqlite3/migrator'
+import { createClient } from '@libsql/client'
+import { drizzle, type LibSQLDatabase } from 'drizzle-orm/libsql'
 import * as schema from './schema'
 
-let _db: ReturnType<typeof drizzle> | null = null
+let _db: LibSQLDatabase<typeof schema> | null = null
 
 export function getDb() {
   if (!_db) {
-    const sqlite = new Database('./race.db')
-    sqlite.pragma('journal_mode = WAL')
-    sqlite.pragma('foreign_keys = ON')
-    _db = drizzle(sqlite, { schema })
-    migrate(_db, { migrationsFolder: './server/db/migrations' })
+    const url = process.env.TURSO_DATABASE_URL ?? 'file:./race.db'
+    const authToken = process.env.TURSO_AUTH_TOKEN
+    const client = createClient(authToken ? { url, authToken } : { url })
+    _db = drizzle(client, { schema })
   }
   return _db
 }

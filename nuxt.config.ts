@@ -7,10 +7,5 @@ export default defineNuxtConfig({
   runtimeConfig: {
     adminPin: process.env.NUXT_ADMIN_PIN || '1234',
     jwtSecret: process.env.NUXT_JWT_SECRET || 'change-me-in-production-secret-key'
-  },
-  nitro: {
-    rollupConfig: {
-      external: ['better-sqlite3']
-    }
   }
 })
