@@ -6,12 +6,12 @@
       <div class="flex flex-wrap items-center gap-4 sm:gap-8">
         <div>
           <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium mb-0.5">Elapsed</p>
-          <p class="text-3xl font-mono font-bold text-gray-900 dark:text-white tabular-nums">{{ formatMs(elapsed) }}</p>
+          <p class="text-3xl font-mono font-bold text-gray-900 dark:text-white tabular-nums">{{ formatClock(elapsed) }}</p>
         </div>
         <div v-if="competition.controlTimeMinutes">
           <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium mb-0.5">Remaining</p>
           <p class="text-3xl font-mono font-bold tabular-nums" :class="remaining <= 300_000 ? 'text-red-500' : 'text-gray-900 dark:text-white'">
-            {{ formatMs(remaining) }}
+            {{ formatClock(remaining) }}
           </p>
         </div>
         <div class="ml-auto text-right">
@@ -42,17 +42,17 @@
         </div>
         <div>
           <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium mb-0.5">In Lap</p>
-          <p class="text-3xl font-mono font-bold text-gray-900 dark:text-white tabular-nums">{{ formatMs(lapElapsed) }}</p>
+          <p class="text-3xl font-mono font-bold text-gray-900 dark:text-white tabular-nums">{{ formatClock(lapElapsed) }}</p>
         </div>
         <div>
           <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium mb-0.5">Remaining</p>
           <p class="text-3xl font-mono font-bold tabular-nums" :class="lapRemaining <= 120_000 ? 'text-red-500 animate-pulse' : 'text-gray-900 dark:text-white'">
-            {{ formatMs(lapRemaining) }}
+            {{ formatClock(lapRemaining) }}
           </p>
         </div>
         <div>
           <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium mb-0.5">Total</p>
-          <p class="text-2xl font-mono font-bold text-gray-600 dark:text-gray-400 tabular-nums">{{ formatMs(elapsed) }}</p>
+          <p class="text-2xl font-mono font-bold text-gray-600 dark:text-gray-400 tabular-nums">{{ formatClock(elapsed) }}</p>
         </div>
       </div>
       <div class="mt-4">
@@ -79,7 +79,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{ 'lap-end': [], 'control-time-end': [] }>()
 
-const { formatMs } = useFormatTime()
+const { formatClock } = useFormatTime()
 
 const elapsed = ref(0)
 const lapElapsed = ref(0)
@@ -124,6 +124,6 @@ function update() {
 }
 
 let interval: ReturnType<typeof setInterval>
-onMounted(() => { update(); interval = setInterval(update, 50) })
+onMounted(() => { update(); interval = setInterval(update, 1000) })
 onUnmounted(() => clearInterval(interval))
 </script>

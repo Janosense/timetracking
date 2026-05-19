@@ -23,7 +23,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{ started: [] }>()
 
-const { formatMs } = useFormatTime()
+const { formatClock } = useFormatTime()
 const timeRemaining = ref(0)
 let fired = false
 
@@ -36,9 +36,9 @@ function update() {
   }
 }
 
-const formatted = computed(() => formatMs(timeRemaining.value))
+const formatted = computed(() => formatClock(timeRemaining.value))
 
 let interval: ReturnType<typeof setInterval>
-onMounted(() => { update(); interval = setInterval(update, 50) })
+onMounted(() => { update(); interval = setInterval(update, 1000) })
 onUnmounted(() => clearInterval(interval))
 </script>
