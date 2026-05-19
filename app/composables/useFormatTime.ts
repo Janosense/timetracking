@@ -5,8 +5,9 @@ export function useFormatTime() {
     const h = Math.floor(totalSeconds / 3600)
     const m = Math.floor((totalSeconds % 3600) / 60)
     const s = totalSeconds % 60
-    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-    return `${m}:${String(s).padStart(2, '0')}`
+    const msPart = String(ms % 1000).padStart(3, '0')
+    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${msPart}`
+    return `${m}:${String(s).padStart(2, '0')}.${msPart}`
   }
 
   function formatDate(ts: number | null | undefined): string {

@@ -39,6 +39,6 @@ function update() {
 const formatted = computed(() => formatMs(timeRemaining.value))
 
 let interval: ReturnType<typeof setInterval>
-onMounted(() => { update(); interval = setInterval(update, 1000) })
+onMounted(() => { update(); interval = setInterval(update, 50) })
 onUnmounted(() => clearInterval(interval))
 </script>
