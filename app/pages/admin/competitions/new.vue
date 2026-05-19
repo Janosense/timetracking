@@ -84,12 +84,13 @@
               @change="onCsvUpload"
             />
             <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Drop a CSV file here or click to browse</p>
-            <p class="text-xs text-gray-400 mt-1">Format: <code class="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">number;name</code> (one per line)</p>
+            <p class="text-xs text-gray-400 mt-1">Format: <code class="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">number;name;gender</code> (one per line, gender = <code>F</code> or <code>M</code>, optional)</p>
           </div>
           <p v-if="csvError" class="text-sm text-red-500">{{ csvError }}</p>
           <div v-if="form.csvParticipants.length > 0" class="text-sm text-green-600 dark:text-green-400">
             ✓ {{ form.csvParticipants.length }} participants loaded
-            ({{ form.csvParticipants.filter(p => p.name).length }} with names)
+            ({{ form.csvParticipants.filter(p => p.name).length }} with names,
+            {{ form.csvParticipants.filter(p => p.gender).length }} with gender)
           </div>
           <div v-if="form.csvParticipants.length > 0" class="rounded-lg border border-gray-100 dark:border-gray-800 overflow-hidden">
             <table class="w-full text-xs">
@@ -97,15 +98,17 @@
                 <tr>
                   <th class="text-left px-3 py-2 text-gray-500 font-medium">Bib</th>
                   <th class="text-left px-3 py-2 text-gray-500 font-medium">Name</th>
+                  <th class="text-left px-3 py-2 text-gray-500 font-medium w-16">Gender</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-50 dark:divide-gray-900">
                 <tr v-for="p in form.csvParticipants.slice(0, 5)" :key="p.number">
                   <td class="px-3 py-1.5 font-mono">{{ p.number }}</td>
                   <td class="px-3 py-1.5 text-gray-600 dark:text-gray-400">{{ p.name || '—' }}</td>
+                  <td class="px-3 py-1.5 text-gray-600 dark:text-gray-400">{{ p.gender || '—' }}</td>
                 </tr>
                 <tr v-if="form.csvParticipants.length > 5">
-                  <td colspan="2" class="px-3 py-1.5 text-gray-400 italic">… and {{ form.csvParticipants.length - 5 }} more</td>
+                  <td colspan="3" class="px-3 py-1.5 text-gray-400 italic">… and {{ form.csvParticipants.length - 5 }} more</td>
                 </tr>
               </tbody>
             </table>
@@ -177,7 +180,7 @@ const form = reactive({
   participantMode: 'range' as 'range' | 'csv',
   rangeFrom: 1,
   rangeTo: 50,
-  csvParticipants: [] as { number: number; name?: string }[],
+  csvParticipants: [] as { number: number; name?: string; gender?: 'F' | 'M' }[],
   controlTimeMinutes: 60,
   lapDurationMinutes: 60
 })
@@ -225,8 +228,12 @@ async function onCsvUpload(e: Event) {
   if (!file) return
   try {
     const parsed = await readCsvFile(file)
-    if (parsed.length === 0) { csvError.value = 'No valid rows found. Expected: number;name'; return }
-    form.csvParticipants = parsed.map(p => ({ number: p.number, name: p.name || undefined }))
+    if (parsed.length === 0) { csvError.value = 'No valid rows found. Expected: number;name;gender'; return }
+    form.csvParticipants = parsed.map(p => ({
+      number: p.number,
+      name: p.name || undefined,
+      gender: p.gender ?? undefined
+    }))
   } catch {
     csvError.value = 'Failed to read the file'
   }
@@ -237,7 +244,7 @@ async function submit() {
 
   if (!form.name.trim()) { formError.value = 'Competition name is required'; return }
 
-  let participants: { number: number; name?: string }[]
+  let participants: { number: number; name?: string; gender?: 'F' | 'M' }[]
   if (form.participantMode === 'range') {
     if (form.rangeFrom < 1) { formError.value = 'Range must start at 1 or above'; return }
     if (form.rangeTo < form.rangeFrom) { formError.value = '"To" must be ≥ "From"'; return }

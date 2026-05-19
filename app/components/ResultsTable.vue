@@ -7,6 +7,7 @@
             <th class="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400 w-14">Place</th>
             <th class="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400 w-16">Bib</th>
             <th v-if="hasNames" class="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400">Name</th>
+            <th v-if="hasGenders" class="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400 w-16">Gender</th>
             <th v-if="isClassic" class="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400">Time</th>
             <th v-if="!isClassic" class="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400 w-20">Laps</th>
             <th v-if="!isClassic" class="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400">Last Lap</th>
@@ -29,6 +30,9 @@
                 @click="openLapDetail(row)"
               >{{ row.name || '—' }}</button>
               <span v-else>{{ row.name || '—' }}</span>
+            </td>
+            <td v-if="hasGenders" class="px-4 py-3 text-gray-700 dark:text-gray-300 font-mono">
+              {{ row.gender || '—' }}
             </td>
             <td v-if="isClassic" class="px-4 py-3 font-mono text-gray-700 dark:text-gray-300">
               {{ row.finishTimeMs !== null ? formatMs(row.finishTimeMs) : '—' }}
@@ -79,10 +83,12 @@ const { formatMs } = useFormatTime()
 
 const isClassic = computed(() => props.competition.type === 'classic')
 const hasNames = computed(() => props.competition.participants.some(p => p.name))
+const hasGenders = computed(() => props.competition.participants.some(p => p.gender))
 
 const colCount = computed(() => {
   let n = 3 // place + bib + status
   if (hasNames.value) n++
+  if (hasGenders.value) n++
   if (isClassic.value) n++ // time
   else n += 3 // laps + last lap + total time
   return n

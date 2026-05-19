@@ -1,9 +1,19 @@
+export type Gender = 'F' | 'M'
+
 export interface CsvParticipant {
   number: number
   name: string
+  gender: Gender | null
 }
 
 export function useCsvParser() {
+  function parseGender(raw: string | undefined): Gender | null {
+    const v = (raw ?? '').trim().toUpperCase()
+    if (v === 'F' || v === 'W') return 'F'
+    if (v === 'M') return 'M'
+    return null
+  }
+
   function parseCsv(content: string): CsvParticipant[] {
     return content
       .split('\n')
@@ -13,7 +23,8 @@ export function useCsvParser() {
         const parts = line.split(';')
         const number = parseInt(parts[0]?.trim() ?? '', 10)
         const name = parts[1]?.trim() ?? ''
-        return { number, name }
+        const gender = parseGender(parts[2])
+        return { number, name, gender }
       })
       .filter(p => !isNaN(p.number) && p.number > 0)
   }

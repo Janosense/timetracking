@@ -59,6 +59,9 @@
 
       <!-- Results table -->
       <ResultsTable :competition="competition" />
+
+      <!-- Women's standings (combined score among women) -->
+      <WomensStandings :competition="competition" />
     </div>
 
     <div v-else class="text-center py-20 text-gray-400">

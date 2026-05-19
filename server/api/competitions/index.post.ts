@@ -9,7 +9,7 @@ interface CreateCompetitionBody {
   controlTimeMinutes?: number
   lapDurationMinutes?: number
   targetLaps?: number
-  participants: { number: number; name?: string }[]
+  participants: { number: number; name?: string; gender?: 'F' | 'M' }[]
 }
 
 export default defineEventHandler(async (event) => {
@@ -45,6 +45,7 @@ export default defineEventHandler(async (event) => {
         competitionId: id,
         bibNumber: p.number,
         name: p.name?.trim() || null,
+        gender: p.gender === 'F' || p.gender === 'M' ? p.gender : null,
         status: 'active' as const
       }))
     )

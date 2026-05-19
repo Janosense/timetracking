@@ -11,6 +11,15 @@
       <div class="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin opacity-60" />
     </div>
 
+    <!-- Gender badge -->
+    <span
+      v-if="participant.gender"
+      class="absolute top-1 right-1 text-[10px] font-bold leading-none px-1 py-0.5 rounded"
+      :class="genderBadgeClass"
+    >
+      {{ participant.gender }}
+    </span>
+
     <!-- Bib number -->
     <span class="font-bold tabular-nums leading-none" :class="bibTextClass">
       {{ participant.bibNumber }}
@@ -104,6 +113,12 @@ const bibTextClass = computed(() => {
     default: return `${size} text-gray-900 dark:text-white`
   }
 })
+
+const genderBadgeClass = computed(() =>
+  props.participant.gender === 'F'
+    ? 'bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300'
+    : 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
+)
 
 const subTextClass = computed(() => {
   switch (tileState.value) {

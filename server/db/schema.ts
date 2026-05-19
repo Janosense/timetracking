@@ -20,6 +20,7 @@ export const participants = sqliteTable('participants', {
   competitionId: text('competition_id').notNull().references(() => competitions.id),
   bibNumber: integer('bib_number').notNull(),
   name: text('name'),
+  gender: text('gender', { enum: ['F', 'M'] }),
   status: text('status', {
     enum: ['active', 'dnf', 'winner', 'prize_winner', 'finisher']
   }).notNull().default('active')

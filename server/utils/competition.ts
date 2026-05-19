@@ -152,6 +152,7 @@ export interface ParticipantResult {
   id: string
   bibNumber: number
   name: string | null
+  gender: 'F' | 'M' | null
   status: string
   laps: LapResult[]
   completedLaps: number
@@ -218,6 +219,7 @@ export async function buildCompetitionResponse(competitionId: string): Promise<C
       id: p.id,
       bibNumber: p.bibNumber,
       name: p.name,
+      gender: p.gender,
       status: p.status,
       laps,
       completedLaps: laps.length,
