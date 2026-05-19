@@ -31,7 +31,7 @@
         :key="p.id"
         :participant="p"
         :competition="competition"
-        :loading="loadingBib === p.bibNumber"
+        :loading="pendingBibs?.has(p.bibNumber) ?? false"
         @finish="emit('finish', $event)"
         @undo="emit('undo', $event)"
       />
@@ -60,7 +60,7 @@ import type { CompetitionResponse, ParticipantResult } from '~/server/utils/comp
 
 const props = defineProps<{
   competition: CompetitionResponse
-  loadingBib?: number | null
+  pendingBibs?: Set<number>
 }>()
 
 const emit = defineEmits<{

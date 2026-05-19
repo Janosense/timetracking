@@ -42,5 +42,5 @@ export default defineEventHandler(async (event) => {
     await recomputeClassicStatuses(competitionId)
   }
 
-  return buildCompetitionResponse(competitionId)
+  return { ok: true }
 })

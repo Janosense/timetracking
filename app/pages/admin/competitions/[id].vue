@@ -52,7 +52,6 @@
           Start Competition Now
         </UButton>
       </div>
-      <!-- Show grid as preview but not clickable -->
       <div class="mt-8">
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">{{ competition.totalCount }} participants</p>
         <ParticipantGrid :competition="competition" />
@@ -61,12 +60,38 @@
 
     <!-- Active state -->
     <template v-else-if="competition.status === 'active'">
-      <RaceTimer :competition="competition" @lap-end="refresh" @control-time-end="refresh" />
+      <RaceTimer :competition="competition" @lap-end="poll" @control-time-end="poll" />
+
+      <!-- Unsynced finishes banner -->
+      <UAlert
+        v-if="stuckEntries.length > 0"
+        color="error"
+        variant="subtle"
+        icon="i-lucide-cloud-off"
+        class="mt-4"
+        :title="`${stuckEntries.length} finish${stuckEntries.length === 1 ? '' : 'es'} not synced`"
+      >
+        <template #description>
+          <div class="text-sm space-y-2">
+            <p>The server didn't accept the following actions after 4 retries. Local race state is correct; the database is behind.</p>
+            <ul class="list-disc ml-5">
+              <li v-for="w in stuckEntries" :key="w.bib" class="font-mono">
+                Bib #{{ w.bib }} — {{ w.kind === 'finish' ? `lap ${w.lapNumber}` : `undo lap ${w.lapNumber}` }}
+                <span v-if="w.lastError" class="text-gray-500">({{ w.lastError }})</span>
+              </li>
+            </ul>
+            <div class="flex gap-2 pt-1">
+              <UButton size="xs" color="primary" @click="retryAllStuck">Retry all</UButton>
+              <UButton size="xs" variant="ghost" color="neutral" @click="discardAllStuck">Discard all</UButton>
+            </div>
+          </div>
+        </template>
+      </UAlert>
 
       <div class="mt-5">
         <ParticipantGrid
           :competition="competition"
-          :loading-bib="pendingBib"
+          :pending-bibs="pendingBibs"
           @finish="recordFinish"
           @undo="openUndo"
         />
@@ -104,7 +129,7 @@
     v-model:open="undoModalOpen"
     :bib-number="undoBib"
     :participant-name="undoParticipantName"
-    :loading="undoing"
+    :loading="false"
     @confirm="confirmUndo"
   />
 
@@ -143,17 +168,26 @@ const { data: competition, refresh } = await useAsyncData<CompetitionResponse>(
   () => $fetch(`/api/competitions/${id}`)
 )
 
-// Poll every 2s while active
-const mutating = ref(false)
-let pollInterval: ReturnType<typeof setInterval>
-onMounted(() => {
-  pollInterval = setInterval(() => {
-    if (!mutating.value && competition.value?.status === 'active') refresh()
-  }, 2000)
-})
-onUnmounted(() => clearInterval(pollInterval))
+const {
+  pendingBibs,
+  stuckEntries,
+  poll,
+  recordFinish: doRecordFinish,
+  recordUndo: doRecordUndo,
+  retryStuck,
+  discardStuck,
+  startPolling,
+  stopPolling,
+  clearAllTimers
+} = useOptimisticCompetition(id, competition)
 
-// ─── Labels ───────────────────────────────��────────────────────────────────
+onMounted(startPolling)
+onUnmounted(() => {
+  stopPolling()
+  clearAllTimers()
+})
+
+// ─── Labels ──────────────────────────────────────────────────────────────────
 const typeLabel = computed(() => competition.value?.type === 'classic' ? 'Classic' : 'Backyard Ultra')
 const statusLabel = computed(() => ({ pending: 'Upcoming', active: 'Live', completed: 'Finished' }[competition.value?.status ?? ''] ?? ''))
 const startLabel = computed(() => {
@@ -179,29 +213,14 @@ async function startCompetition() {
   }
 }
 
-// ─── Record finish ──────────────────────────────────────────────────────────
-const pendingBib = ref<number | null>(null)
-
-async function recordFinish(bibNumber: number) {
-  if (pendingBib.value !== null) return
-  pendingBib.value = bibNumber
-  mutating.value = true
-  try {
-    await $fetch(`/api/competitions/${id}/participants/${bibNumber}/finish`, { method: 'POST' })
-    await refresh()
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Failed to record finish'
-    toast.add({ title: msg, color: 'error', duration: 4000 })
-  } finally {
-    pendingBib.value = null
-    mutating.value = false
-  }
+// ─── Record finish (optimistic, fire-and-forget) ─────────────────────────────
+function recordFinish(bibNumber: number) {
+  doRecordFinish(bibNumber)
 }
 
 // ─── Undo finish ────────────────────────────────────────────────────────────
 const undoModalOpen = ref(false)
 const undoBib = ref<number | null>(null)
-const undoing = ref(false)
 
 const undoParticipantName = computed(() => {
   if (!undoBib.value || !competition.value) return null
@@ -213,22 +232,19 @@ function openUndo(bibNumber: number) {
   undoModalOpen.value = true
 }
 
-async function confirmUndo() {
+function confirmUndo() {
   if (!undoBib.value) return
-  undoing.value = true
-  mutating.value = true
-  try {
-    await $fetch(`/api/competitions/${id}/participants/${undoBib.value}/finish`, { method: 'DELETE' })
-    undoModalOpen.value = false
-    undoBib.value = null
-    await refresh()
-    toast.add({ title: 'Finish removed', color: 'neutral', duration: 3000 })
-  } catch {
-    toast.add({ title: 'Failed to undo', color: 'error', duration: 4000 })
-  } finally {
-    undoing.value = false
-    mutating.value = false
-  }
+  doRecordUndo(undoBib.value)
+  undoModalOpen.value = false
+  undoBib.value = null
+}
+
+// ─── Stuck queue actions ────────────────────────────────────────────────────
+function retryAllStuck() {
+  for (const w of [...stuckEntries.value]) retryStuck(w.bib)
+}
+function discardAllStuck() {
+  for (const w of [...stuckEntries.value]) discardStuck(w.bib)
 }
 
 // ─── End competition ────────────────────────────────────────────────────────
@@ -248,4 +264,5 @@ async function confirmEnd() {
     ending.value = false
   }
 }
+
 </script>
