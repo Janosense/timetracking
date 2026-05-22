@@ -19,14 +19,14 @@
           <tr
             v-for="row in tableRows"
             :key="row.id"
-            class="hover:bg-gray-50 dark:hover:bg-gray-900/40 transition-colors"
+            :class="rowClass(row)"
           >
             <td class="px-4 py-3 text-gray-400 font-medium tabular-nums">{{ row.place ?? '—' }}</td>
             <td class="px-4 py-3 font-mono font-semibold text-gray-700 dark:text-gray-300">{{ row.bibNumber }}</td>
             <td v-if="hasNames" class="px-4 py-3 text-gray-800 dark:text-gray-200">
               <button
                 v-if="!isClassic && row.completedLaps > 0"
-                class="hover:text-primary-600 dark:hover:text-primary-400 hover:underline transition-colors"
+                class="text-left hover:text-primary-600 dark:hover:text-primary-400 hover:underline transition-colors"
                 @click="openLapDetail(row)"
               >{{ row.name || '—' }}</button>
               <span v-else>{{ row.name || '—' }}</span>
@@ -62,6 +62,22 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Legend -->
+    <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-gray-500 dark:text-gray-400">
+      <span class="flex items-center gap-1.5">
+        <span class="w-3 h-3 rounded border border-green-300 dark:border-green-800 bg-green-50 dark:bg-green-950/40 inline-block" />
+        {{ isClassic ? 'Finished' : 'Finished current lap' }}
+      </span>
+      <span class="flex items-center gap-1.5">
+        <span class="w-3 h-3 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 inline-block" />
+        Active
+      </span>
+      <span class="flex items-center gap-1.5">
+        <span class="w-3 h-3 rounded border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-800/60 inline-block" />
+        DNF
+      </span>
     </div>
 
     <LapDetailModal
@@ -138,6 +154,20 @@ function statusLabel(status: string): string {
     active: 'Active', dnf: 'DNF'
   }
   return map[status] ?? status
+}
+
+function rowClass(row: ParticipantResult): string {
+  const base = 'transition-colors'
+  if (row.status === 'dnf') {
+    return `${base} bg-gray-100/70 dark:bg-gray-800/40 hover:bg-gray-200/60 dark:hover:bg-gray-800/60`
+  }
+  const finishedCurrent = isClassic.value
+    ? row.finishTimeMs !== null
+    : row.status === 'active' && row.currentLapFinished
+  if (finishedCurrent) {
+    return `${base} bg-green-50 dark:bg-green-950/30 hover:bg-green-100 dark:hover:bg-green-950/50`
+  }
+  return `${base} hover:bg-gray-50 dark:hover:bg-gray-900/40`
 }
 
 function statusColor(status: string): 'warning' | 'neutral' | 'success' | 'primary' | 'error' {
