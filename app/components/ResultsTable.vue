@@ -7,12 +7,12 @@
             <th class="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400 w-14">Place</th>
             <th class="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400 w-16">Bib</th>
             <th v-if="hasNames" class="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400">Name</th>
-            <th v-if="hasGenders" class="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400 w-16">Gender</th>
             <th v-if="isClassic" class="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400">Time</th>
             <th v-if="!isClassic" class="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400 w-20">Laps</th>
+            <th class="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400">Status</th>
             <th v-if="!isClassic" class="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400">Last Lap</th>
             <th v-if="!isClassic" class="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400">Total Time</th>
-            <th class="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400">Status</th>
+            <th v-if="hasGenders" class="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400 w-16">Gender</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-gray-900">
@@ -31,20 +31,11 @@
               >{{ row.name || '—' }}</button>
               <span v-else>{{ row.name || '—' }}</span>
             </td>
-            <td v-if="hasGenders" class="px-4 py-3 text-gray-700 dark:text-gray-300 font-mono">
-              {{ row.gender || '—' }}
-            </td>
             <td v-if="isClassic" class="px-4 py-3 font-mono text-gray-700 dark:text-gray-300">
               {{ row.finishTimeMs !== null ? formatMs(row.finishTimeMs) : '—' }}
             </td>
             <td v-if="!isClassic" class="px-4 py-3 text-gray-700 dark:text-gray-300 tabular-nums">
               {{ row.completedLaps }}{{ competition.targetLaps ? `/${competition.targetLaps}` : '' }}
-            </td>
-            <td v-if="!isClassic" class="px-4 py-3 font-mono text-gray-700 dark:text-gray-300">
-              {{ formatMs(row.lastLapTimeMs) }}
-            </td>
-            <td v-if="!isClassic" class="px-4 py-3 font-mono text-gray-700 dark:text-gray-300">
-              {{ formatMs(row.totalTimeMs) }}
             </td>
             <td class="px-4 py-3">
               <UBadge
@@ -53,6 +44,15 @@
                 variant="soft"
                 size="sm"
               />
+            </td>
+            <td v-if="!isClassic" class="px-4 py-3 font-mono text-gray-700 dark:text-gray-300">
+              {{ formatMs(row.lastLapTimeMs) }}
+            </td>
+            <td v-if="!isClassic" class="px-4 py-3 font-mono text-gray-700 dark:text-gray-300">
+              {{ formatMs(row.totalTimeMs) }}
+            </td>
+            <td v-if="hasGenders" class="px-4 py-3 text-gray-700 dark:text-gray-300 font-mono">
+              {{ row.gender || '—' }}
             </td>
           </tr>
           <tr v-if="tableRows.length === 0">
