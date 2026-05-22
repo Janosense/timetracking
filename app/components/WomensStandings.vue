@@ -47,7 +47,7 @@
             <td class="px-4 py-3">
               <UBadge
                 :label="womensBadgeLabel(row)"
-                :color="row.place === 1 && row.finishTimeMs !== null ? 'warning' : statusColor(row.status)"
+                :color="isWomensWinner(row) ? 'warning' : statusColor(row.status)"
                 variant="soft"
                 size="sm"
               />
@@ -108,10 +108,17 @@ const rankedWomen = computed(() => {
   }))
 })
 
-function womensBadgeLabel(row: { place: number | null; status: string; finishTimeMs: number | null; completedLaps: number }): string {
-  const isFirst = row.place === 1
-  if (isFirst && isClassic.value && row.finishTimeMs !== null) return "Women's Winner"
-  if (isFirst && !isClassic.value && row.completedLaps > 0) return "Women's Winner"
+type WomensRow = { place: number | null; status: string; finishTimeMs: number | null; completedLaps: number }
+
+function isWomensWinner(row: WomensRow): boolean {
+  if (props.competition.status !== 'completed') return false
+  if (row.place !== 1) return false
+  if (isClassic.value) return row.finishTimeMs !== null
+  return row.completedLaps > 0
+}
+
+function womensBadgeLabel(row: WomensRow): string {
+  if (isWomensWinner(row)) return "Women's Winner"
   return statusLabel(row.status)
 }
 
