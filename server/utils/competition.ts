@@ -1,4 +1,4 @@
-import { eq, and, asc, notInArray } from 'drizzle-orm'
+import { eq, and, asc, notInArray, inArray } from 'drizzle-orm'
 import { getDb } from '../db'
 import { competitions, participants, finishRecords } from '../db/schema'
 
@@ -41,10 +41,16 @@ export async function processClassicExpiry(competitionId: string): Promise<void>
 
 async function finalizeTargetBackyard(competitionId: string, lapDurationMs: number): Promise<void> {
   const db = getDb()
-  const activeParticipants = await db.select().from(participants)
-    .where(and(eq(participants.competitionId, competitionId), eq(participants.status, 'active')))
+  // Include already-finalized (winner/finisher) participants alongside still-active ones so
+  // partial or concurrent finalize runs converge on the same single winner instead of
+  // crowning a second one among whoever happens to still be 'active'.
+  const rankable = await db.select().from(participants)
+    .where(and(
+      eq(participants.competitionId, competitionId),
+      inArray(participants.status, ['active', 'winner', 'finisher'])
+    ))
 
-  if (activeParticipants.length === 0) {
+  if (rankable.length === 0) {
     await db.update(competitions).set({ status: 'completed' })
       .where(eq(competitions.id, competitionId))
     return
@@ -53,7 +59,7 @@ async function finalizeTargetBackyard(competitionId: string, lapDurationMs: numb
   const allFinishes = await db.select().from(finishRecords)
     .where(eq(finishRecords.competitionId, competitionId))
 
-  const ranked = activeParticipants.map(p => {
+  const ranked = rankable.map(p => {
     const pLaps = allFinishes.filter(f => f.participantId === p.id)
     const totalTimeMs = pLaps.reduce((sum, l) => sum + l.finishTimeMs - (l.lapNumber - 1) * lapDurationMs, 0)
     return { participant: p, totalTimeMs }

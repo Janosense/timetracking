@@ -15,6 +15,13 @@
       "when": 1779026268597,
       "tag": "0001_add_gender",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1779840000000,
+      "tag": "0002_demote_duplicate_winners",
+      "breakpoints": true
     }
   ]
 }
